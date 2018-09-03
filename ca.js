@@ -3,20 +3,20 @@
  * @Date:   21:39:21, 02-Sep-2018
  * @Filename: ca.js
  * @Last modified by:   edl
- * @Last modified time: 07:51:06, 03-Sep-2018
+ * @Last modified time: 09:42:36, 03-Sep-2018
  */
 
 var colorJump = 5;
 var baseColor = 0
 var maxColor = 300;
-var largeCubeSize = 35;
+var largeCubeSize = 40;
 var fill = 0.1;
 
 var cells = [];
-var paused = false;
+var paused = true;
 
-windowX = window.innerWidth;
-windowY = window.innerHeight;
+windowX = $("#renderer")[0].clientWidth;
+windowY = $("#renderer")[0].clientHeight;
 
 var scene = new THREE.Scene();
 var camera = new THREE.PerspectiveCamera( 75, windowX / windowY, 0.1, 1000 );
@@ -25,7 +25,7 @@ var renderer = new THREE.WebGLRenderer();
 renderer.setSize( windowX, windowY );
 $("#renderer")[0].appendChild( renderer.domElement );
 
-var rule = [0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+var rule = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 var controls;
 
@@ -119,7 +119,6 @@ var col = 0;
 function animate() {
 	requestAnimationFrame( animate );
 
-  // drag();
   controls.update();
 
   if (!paused){
@@ -156,8 +155,35 @@ function calcCubes(){
     for (var j = 0; j < largeCubeSize; j++) {
       for (var k = 0; k < largeCubeSize; k++) {
         cells[i][j][k].update();
-        // cells[i][j][k].cube.visible = false;
       }
     }
+  }
+}
+
+function resetCubes() {
+  while(scene.children.length > 0){
+    scene.remove(scene.children[0]);
+  }
+  paused = true;
+  for(var i = 0; i < largeCubeSize; i++){
+    for (var j = 0; j < largeCubeSize; j++) {
+      for (var k = 0; k < largeCubeSize; k++) {
+        cells[i][j][k] = new Cube(i, j, k, Math.random()<fill);
+      }
+    }
+  }
+}
+
+function updateRules(id){
+  paused = true;
+  rule[id] = (rule[id]+1)%3
+  var b = document.getElementById('rules').children[id]
+  b.className = "button";
+  if (rule[id] === 0){
+    b.className += " red";
+  }else if (rule[id] === 1){
+    b.className += " blue";
+  }else if (rule[id] === 2){
+    b.className += " green";
   }
 }
