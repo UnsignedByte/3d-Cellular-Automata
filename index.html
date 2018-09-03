@@ -3,13 +3,14 @@
 	<head>
 		<meta charset=utf-8>
 		<title>3d Cellular Automata</title>
-		<style>
-			body { margin: 0; }
-			canvas { width: 100%; height: 100% }
-		</style>
+		<link rel="stylesheet" type="text/css" href="index.css">
 	</head>
 	<body>
     <div id="renderer"></div>
+    <div id="menu">
+      <button id="pause" onclick="paused=!paused">Pause/Play</button>
+      <button id="step" onclick="if (paused) calcCubes();">Step</button>
+    </div>
 
 
 		<script type="text/javascript" src="js/jquery-3.3.1.min.js"></script>
