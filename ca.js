@@ -3,15 +3,17 @@
  * @Date:   21:39:21, 02-Sep-2018
  * @Filename: ca.js
  * @Last modified by:   edl
- * @Last modified time: 09:42:36, 03-Sep-2018
+ * @Last modified time: 15:12:57, 03-Sep-2018
  */
 
 var colorJump = 5;
 var baseColor = 0
-var maxColor = 300;
-var largeCubeSize = 40;
+var maxColor = 360;
+var largeCubeSize = 45;
 var fill = 0.1;
+var mouse, raycaster, isShiftDown = false;
 
+var ids = [];
 var cells = [];
 var paused = true;
 
@@ -44,9 +46,11 @@ class Cube {
     this.neighbors = 0;
     this.age = 0;
 
-    this.cube.visible = alive;
+    this.alive = alive;
 
-    scene.add(this.cube);
+    if (this.alive){
+      scene.add(this.cube);
+    }
   }
 
   reset(){
@@ -56,19 +60,20 @@ class Cube {
 
   update(){
     if (rule[this.neighbors] === 0){
-      // this.cube.visible = false;
-      this.cube.visible = false;
+      scene.remove(this.cube);
       this.reset();
     }else if (rule[this.neighbors] === 2){
-      if (this.cube.visible){
-        this.age = Math.min(this.age+colorJump, maxColor-baseColor);
+      if (this.alive){
+        this.age = (this.age+colorJump)%maxColor;
         this.cube.material.setValues({color:getColor(baseColor+this.age)});
       }else{
-        this.cube.visible = true;
+        this.alive = true;
+        // this.cube.visible = true;
+        scene.add(this.cube);
       }
     }else if (rule[this.neighbors] === 1){
-      if (this.cube.visible){
-        this.age = Math.min(this.age+colorJump, maxColor-baseColor);
+      if (this.alive){
+        this.age = (this.age+colorJump)%maxColor;
         this.cube.material.setValues({color:getColor(baseColor+this.age)});
       }
     }
@@ -103,6 +108,11 @@ function init(){
 
   camera.lookAt(scene.position);
 
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
+
+  document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
 }
 
 function onWindowResize() {
@@ -117,6 +127,7 @@ function getColor(x){
 
 var col = 0;
 function animate() {
+  concTime = Date.now();
 	requestAnimationFrame( animate );
 
   controls.update();
@@ -125,6 +136,7 @@ function animate() {
     calcCubes();
   }
   render();
+  $("#fps")[0].innerHTML = 'FPS: ' + Math.round(100000 / (Date.now() - concTime)) / 100;
 }
 
 function render(){
@@ -135,21 +147,24 @@ function calcCubes(){
   var posNeighbors = [[1,1,-1], [1,0,-1], [1,-1,-1], [0,-1,-1], [-1,-1,-1], [-1,0,-1], [-1,1,-1], [0,1,-1],
                       [1,1, 0], [1,0, 0], [1,-1, 0], [0,-1, 0], [-1,-1, 0], [-1,0, 0], [-1,1, 0], [0,1, 0],
                       [1,1, 1], [1,0, 1], [1,-1, 1], [0,-1, 1], [-1,-1, 1], [-1,0, 1], [-1,1, 1], [0,1, 1],
-                      [0,0, 1], [0,0,-1]]
+                      [0,0, 1], [0,0,-1]];
 
-  for(var i = 0; i < largeCubeSize; i++){
-    for (var j = 0; j < largeCubeSize; j++) {
-      for (var k = 0; k < largeCubeSize; k++) {
-        if (cells[i][j][k].cube.visible){
-          for (var n = 0; n < posNeighbors.length; n++){
-            var poN = posNeighbors[n];
-            var x = (i+poN[0]+largeCubeSize)%largeCubeSize, y = (j+poN[1]+largeCubeSize)%largeCubeSize, z = (k+poN[2]+largeCubeSize)%largeCubeSize;
-            cells[x][y][z].neighbors++;
-          }
-        }
+  scene.traverse( function( node ) {
+    if ( node instanceof THREE.Mesh) {
+
+      for (var n = 0; n < posNeighbors.length; n++){
+        var poN = posNeighbors[n];
+
+        var i = node.position.x+largeCubeSize/2;
+        var j = node.position.y+largeCubeSize/2;
+        var k = node.position.z+largeCubeSize/2;
+
+        var x = (i+poN[0]+largeCubeSize)%largeCubeSize, y = (j+poN[1]+largeCubeSize)%largeCubeSize, z = (k+poN[2]+largeCubeSize)%largeCubeSize;
+        cells[x][y][z].neighbors++;
       }
     }
-  }
+  } );
+
 
   for(var i = 0; i < largeCubeSize; i++){
     for (var j = 0; j < largeCubeSize; j++) {
@@ -186,4 +201,17 @@ function updateRules(id){
   }else if (rule[id] === 2){
     b.className += " green";
   }
+}
+
+function onDocumentMouseMove( event ) {
+	// event.preventDefault();
+	// mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+	// raycaster.setFromCamera( mouse, camera );
+	// var intersects = raycaster.intersectObjects( objects );
+	// if ( intersects.length > 0 ) {
+	// 	var intersect = intersects[ 0 ];
+	// 	rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
+	// 	rollOverMesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
+	// }
+	// render();
 }
