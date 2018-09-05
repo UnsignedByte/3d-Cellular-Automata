@@ -3,18 +3,21 @@
  * @Date:   21:39:21, 02-Sep-2018
  * @Filename: ca.js
  * @Last modified by:   edl
- * @Last modified time: 15:12:57, 03-Sep-2018
+ * @Last modified time: 16:42:39, 04-Sep-2018
  */
 
 var colorJump = 5;
 var baseColor = 0
 var maxColor = 360;
-var largeCubeSize = 45;
+var largeCubeSize = 20;
 var fill = 0.1;
 var mouse, raycaster, isShiftDown = false;
+var calculating = false;
+var currFrame = 0;
 
 var ids = [];
 var cells = [];
+var frames = [];
 var paused = true;
 
 windowX = $("#renderer")[0].clientWidth;
@@ -68,7 +71,6 @@ class Cube {
         this.cube.material.setValues({color:getColor(baseColor+this.age)});
       }else{
         this.alive = true;
-        // this.cube.visible = true;
         scene.add(this.cube);
       }
     }else if (rule[this.neighbors] === 1){
@@ -111,7 +113,7 @@ function init(){
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
 
-  document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+  // document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
 }
 
@@ -125,18 +127,48 @@ function getColor(x){
   return new THREE.Color("hsl("+x%360+", 100%, 50%)");
 }
 
+function calculate(){
+  paused = true;
+  calculating = !calculating;
+  if (calculating){
+    loopCalc();
+  }
+}
+
+function loopCalc(){
+  if (calculating){
+    requestAnimationFrame(loopCalc);
+    frames.push(calcCubes());
+  }
+}
+
 var col = 0;
+var timeSinceLastFrame = 0;
 function animate() {
   concTime = Date.now();
 	requestAnimationFrame( animate );
 
   controls.update();
 
-  if (!paused){
-    calcCubes();
+  if (Date.now() - timeSinceLastFrame >= 250){
+    console.log(Date.now() - timeSinceLastFrame);
+    step();
+    timeSinceLastFrame = Date.now();
   }
   render();
   $("#fps")[0].innerHTML = 'FPS: ' + Math.round(100000 / (Date.now() - concTime)) / 100;
+}
+
+function step(){
+  if (!paused){
+    currFrame = (currFrame+1)%frames.length;
+    while(scene.children.length > 0){
+      scene.remove(scene.children[0]);
+    }
+    for(var i = 0; i < frames[currFrame].length; i++){
+      scene.add(frames[currFrame][i]);
+    }
+  }
 }
 
 function render(){
@@ -144,6 +176,7 @@ function render(){
 }
 
 function calcCubes(){
+  var frame = [];
   var posNeighbors = [[1,1,-1], [1,0,-1], [1,-1,-1], [0,-1,-1], [-1,-1,-1], [-1,0,-1], [-1,1,-1], [0,1,-1],
                       [1,1, 0], [1,0, 0], [1,-1, 0], [0,-1, 0], [-1,-1, 0], [-1,0, 0], [-1,1, 0], [0,1, 0],
                       [1,1, 1], [1,0, 1], [1,-1, 1], [0,-1, 1], [-1,-1, 1], [-1,0, 1], [-1,1, 1], [0,1, 1],
@@ -152,6 +185,7 @@ function calcCubes(){
   scene.traverse( function( node ) {
     if ( node instanceof THREE.Mesh) {
 
+      frame.push(node.clone(true));
       for (var n = 0; n < posNeighbors.length; n++){
         var poN = posNeighbors[n];
 
@@ -173,13 +207,16 @@ function calcCubes(){
       }
     }
   }
+  return frame;
 }
 
 function resetCubes() {
+  paused = true;
+  calculating = false;
+  frames = [];
   while(scene.children.length > 0){
     scene.remove(scene.children[0]);
   }
-  paused = true;
   for(var i = 0; i < largeCubeSize; i++){
     for (var j = 0; j < largeCubeSize; j++) {
       for (var k = 0; k < largeCubeSize; k++) {
