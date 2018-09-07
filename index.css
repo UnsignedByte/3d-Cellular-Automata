@@ -3,7 +3,7 @@
  * @Date:   07:40:20, 03-Sep-2018
  * @Filename: index.css
  * @Last modified by:   edl
- * @Last modified time: 09:43:07, 03-Sep-2018
+ * @Last modified time: 21:56:05, 06-Sep-2018
  */
 
 body {
@@ -19,6 +19,11 @@ body {
 /* canvas {
   width: 100%;
 } */
+
+.input {
+  min-width:25px;
+  text-align: center;
+}
 
 .button {
   display: inline-block;

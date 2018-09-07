@@ -3,7 +3,7 @@
  * @Date:   21:39:21, 02-Sep-2018
  * @Filename: ca.js
  * @Last modified by:   edl
- * @Last modified time: 16:42:39, 04-Sep-2018
+ * @Last modified time: 22:00:41, 06-Sep-2018
  */
 
 var colorJump = 5;
@@ -11,14 +11,14 @@ var baseColor = 0
 var maxColor = 360;
 var largeCubeSize = 20;
 var fill = 0.1;
-var mouse, raycaster, isShiftDown = false;
-var calculating = false;
+var mouse, raycaster;
+var calculating;
 var currFrame = 0;
 
 var ids = [];
 var cells = [];
 var frames = [];
-var paused = true;
+var paused;
 
 windowX = $("#renderer")[0].clientWidth;
 windowY = $("#renderer")[0].clientHeight;
@@ -87,6 +87,12 @@ class Cube {
 init();
 animate();
 function init(){
+  paused = true;
+  calculating = false
+  
+  while(scene.children.length > 0){
+    scene.remove(scene.children[0]);
+  }
 
   for(var i = 0; i < largeCubeSize; i++){
     cells[i] = new Array();
@@ -151,7 +157,6 @@ function animate() {
   controls.update();
 
   if (Date.now() - timeSinceLastFrame >= 250){
-    console.log(Date.now() - timeSinceLastFrame);
     step();
     timeSinceLastFrame = Date.now();
   }
@@ -185,7 +190,13 @@ function calcCubes(){
   scene.traverse( function( node ) {
     if ( node instanceof THREE.Mesh) {
 
-      frame.push(node.clone(true));
+      newbebe = node.clone();
+      newbebe.traverse((node) => {
+        if (node.isMesh) {
+          node.material = node.material.clone();
+        }
+      });
+      frame.push(newbebe);
       for (var n = 0; n < posNeighbors.length; n++){
         var poN = posNeighbors[n];
 
